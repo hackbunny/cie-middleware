@@ -92,7 +92,7 @@ RESULT CSession::AddSession(std::unique_ptr<CSession> pSession,CK_SESSION_HANDLE
 
 	g_mSessions.insert(std::make_pair(pSession->hSessionHandle,std::move(pSession)));
 	hSession=pSession->hSessionHandle;
-	P11ER_CALL(pSession->pSlot->pTemplate->FunctionList.templateInitSession(pSession->pSlot->pTemplateData),
+	P11ER_CALL(pSession->pSlot->pTemplateData->InitSession(),
 		ERR_INIT_SESSION)
 
 	pSession->pSlot->dwSessionCount++;
@@ -119,7 +119,7 @@ RESULT CSession::DeleteSession(CK_SESSION_HANDLE hSessionHandle)
 		}
 	}
 
-	P11ER_CALL(pSession->pSlot->pTemplate->FunctionList.templateFinalSession(pSession->pSlot->pTemplateData),
+	P11ER_CALL(pSession->pSlot->pTemplateData->FinalSession(),
 		ERR_FINAL_SESSION)
 
 	g_mSessions.erase(hSessionHandle);
@@ -168,7 +168,7 @@ CK_RV CSession::Login(CK_USER_TYPE userType, CK_CHAR_PTR pPin, CK_ULONG ulPinLen
 		_return(CKR_USER_ALREADY_LOGGED_IN)
 
 	ByteArray baPin(pPin, ulPinLen);
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateLogin(pSlot->pTemplateData,userType, baPin),
+	P11ER_CALL(pSlot->pTemplateData->Login(userType, baPin),
 		ERR_CANT_LOGIN)
 
 	pSlot->User=userType;
@@ -181,7 +181,7 @@ CK_RV CSession::Login(CK_USER_TYPE userType, CK_CHAR_PTR pPin, CK_ULONG ulPinLen
 CK_RV CSession::Logout() {
 	init_func
 
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateLogout(pSlot->pTemplateData,pSlot->User),
+	P11ER_CALL(pSlot->pTemplateData->Logout(pSlot->User),
 		ERR_CANT_LOGOUT)
 
 	for (DWORD i=0;i<pSlot->P11Objects.size();i++) {
@@ -345,7 +345,7 @@ CK_RV CSession::CreateObject(CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OB
 		_return(CKR_USER_NOT_LOGGED_IN)
 
 	std::shared_ptr<CP11Object> pObject;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateCreateObject(pSlot->pTemplateData,pTemplate,ulCount,pObject),
+	P11ER_CALL(pSlot->pTemplateData->CreateObject(pTemplate,ulCount,pObject),
 		ERR_CREATE_OBJECT)
 
 	if (pObject!=NULL) {
@@ -370,7 +370,7 @@ CK_RV CSession::GenerateKey(CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pTempl
 		_return(CKR_USER_NOT_LOGGED_IN)
 
 	std::shared_ptr<CP11Object> pKey;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateGenerateKey(pSlot->pTemplateData,pMechanism,pTemplate,ulCount,pKey),
+	P11ER_CALL(pSlot->pTemplateData->GenerateKey(pMechanism,pTemplate,ulCount,pKey),
 		ERR_CREATE_OBJECT)
 
 	if (pKey!=NULL) {
@@ -396,7 +396,7 @@ CK_RV CSession::GenerateKeyPair(CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pP
 
 	std::shared_ptr<CP11Object> pPublicKey=NULL;
 	std::shared_ptr<CP11Object> pPrivateKey=NULL;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateGenerateKeyPair(pSlot->pTemplateData,pMechanism, pPublicKeyTemplate, ulPublicKeyAttributeCount, pPrivateKeyTemplate, ulPrivateKeyAttributeCount, pPublicKey, pPrivateKey),
+	P11ER_CALL(pSlot->pTemplateData->GenerateKeyPair(pMechanism, pPublicKeyTemplate, ulPublicKeyAttributeCount, pPrivateKeyTemplate, ulPrivateKeyAttributeCount, pPublicKey, pPrivateKey),
 		ERR_CREATE_OBJECT)
 
 	if (pPublicKey!=NULL) {
@@ -433,7 +433,7 @@ RESULT CSession::DestroyObject(CK_OBJECT_HANDLE hObject) {
 	if (pObject==NULL)
 		_return(CKR_OBJECT_HANDLE_INVALID)
 
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateDestroyObject(pSlot->pTemplateData,*pObject),
+	P11ER_CALL(pSlot->pTemplateData->DestroyObject(*pObject),
 		ERR_CREATE_OBJECT)
 
 	P11ER_CALL(pSlot->DelP11Object(pObject),
@@ -968,7 +968,7 @@ CK_RV CSession::SignFinal(ByteArray &Signature)
 	
 	bool bSilent = false;
 	ByteDynArray baSignature;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateSign(pSlot->pTemplateData,pSignKey.get(),baSignBuffer,baSignature,pSignMechanism->mtType,bSilent),
+	P11ER_CALL(pSlot->pTemplateData->Sign(pSignKey.get(),baSignBuffer,baSignature,pSignMechanism->mtType,bSilent),
 		ERR_CANT_SIGN)
 	
 	if (Signature.size()<baSignature.size()) {
@@ -1088,7 +1088,7 @@ CK_RV CSession::SignRecover(ByteArray &Data, ByteArray &Signature)
 	bool bSilent=false;
 
 	ByteDynArray baSignature;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateSignRecover(pSlot->pTemplateData,pSignRecoverKey.get(),baSignRecoverBuffer,baSignature,pSignRecoverMechanism->mtType,bSilent),
+	P11ER_CALL(pSlot->pTemplateData->SignRecover(pSignRecoverKey.get(),baSignRecoverBuffer,baSignature,pSignRecoverMechanism->mtType,bSilent),
 		ERR_CANT_SIGN)
 
 if (Signature.size()<baSignature.size()) {
@@ -1391,7 +1391,7 @@ CK_RV CSession::DecryptFinal(ByteArray &Data)
 		_return(ris)
 
 	ByteDynArray baData;
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateDecrypt(pSlot->pTemplateData,pDecryptKey.get(),baDecryptBuffer,baData,pDecryptMechanism->mtType,false),
+	P11ER_CALL(pSlot->pTemplateData->Decrypt(pDecryptKey.get(),baDecryptBuffer,baData,pDecryptMechanism->mtType,false),
 		ERR_CANT_SIGN)
 
 	ByteDynArray baUnpaddedData;
@@ -1427,7 +1427,7 @@ CK_RV CSession::GenerateRandom(ByteArray &RandomData)
 {
 	init_func
 	ByteDynArray baRandom(RandomData.size());
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateGenerateRandom(pSlot->pTemplateData,baRandom),
+	P11ER_CALL(pSlot->pTemplateData->GenerateRandom(baRandom),
 		ERR_GENERATE_RANDOM)
 	RandomData.copy(baRandom);
 	_return(OK)
@@ -1442,7 +1442,7 @@ CK_RV CSession::InitPIN(ByteArray &Pin)
 	if (pSlot->User!=CKU_SO)
 		_return(CKR_USER_NOT_LOGGED_IN)
 
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateInitPIN(pSlot->pTemplateData,Pin),
+	P11ER_CALL(pSlot->pTemplateData->InitPIN(Pin),
 		ERR_INIT_PIN)
 	_return(OK)
 	exit_func
@@ -1453,7 +1453,7 @@ CK_RV CSession::SetPIN(ByteArray &OldPin,ByteArray &NewPin)
 {
 	init_func
 
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateSetPIN(pSlot->pTemplateData,OldPin,NewPin,pSlot->User),
+	P11ER_CALL(pSlot->pTemplateData->SetPIN(OldPin,NewPin,pSlot->User),
 		ERR_SET_PIN)
 	_return(OK)
 	exit_func
@@ -1499,7 +1499,7 @@ CK_RV CSession::SetAttributeValue(CK_OBJECT_HANDLE hObject,CK_ATTRIBUTE_PTR pTem
 	if (pSlot->User!=CKU_USER)
 		_return(CKR_USER_NOT_LOGGED_IN)
 
-	P11ER_CALL(pSlot->pTemplate->FunctionList.templateSetAttribute(pSlot->pTemplateData,pObject.get(),pTemplate,ulCount),
+	P11ER_CALL(pSlot->pTemplateData->SetAttribute(pObject.get(),pTemplate,ulCount),
 		ERR_SET_ATTRIBUTE)
 
 

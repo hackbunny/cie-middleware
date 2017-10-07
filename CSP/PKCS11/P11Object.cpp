@@ -8,7 +8,8 @@ namespace p11 {
 
 DWORD CP11Object::dwP11ObjectCnt=0;
 
-CP11Object::CP11Object(CK_OBJECT_CLASS objClass,void *TemplateData)
+
+CP11Object::CP11Object(CK_OBJECT_CLASS objClass, CCardTemplateData *TemplateData)
 {
 	ObjClass=objClass;
 	pTemplateData=TemplateData;
@@ -87,10 +88,10 @@ RESULT CP11Object::GetObjectSize(CK_ULONG_PTR pulSize)
 	init_func
 	// devo almeno leggerlo dalla carta per sapere che dimensioni ha
 	if (!bReadValue) {
-		P11ER_CALL(pSlot->pTemplate->FunctionList.templateReadObjectAttributes(pSlot->pTemplateData,this),
+		P11ER_CALL(pSlot->pTemplateData->ReadObjectAttributes(this),
 			ERR_CANT_READ_FROM_CARD)
 	}
-	DWORD ret=pSlot->pTemplate->FunctionList.templateGetObjectSize(pSlot->pTemplateData,this,pulSize);
+	DWORD ret=pSlot->pTemplateData->GetObjectSize(this,pulSize);
 	_return(ret);
 	exit_func
 	_return(FAIL)
@@ -106,7 +107,7 @@ RESULT CP11Object::SetAttributes(CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
 	exit_func
 	_return(FAIL)
 }
-CP11Certificate::CP11Certificate(void *TemplateData) : CP11Object(CKO_CERTIFICATE,TemplateData)
+CP11Certificate::CP11Certificate(CCardTemplateData *TemplateData) : CP11Object(CKO_CERTIFICATE,TemplateData)
 {
 	bReadValue=false;
 }
@@ -127,7 +128,7 @@ RESULT CP11Certificate::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) 
 
 	AttributeMap::iterator it=attributes.find(type);
 	if (it==attributes.end() && !bReadValue) {
-		P11ER_CALL(pSlot->pTemplate->FunctionList.templateReadObjectAttributes(pSlot->pTemplateData,this),
+		P11ER_CALL(pSlot->pTemplateData->ReadObjectAttributes(this),
 			ERR_CANT_READ_FROM_CARD)
 	}
 
@@ -137,7 +138,7 @@ RESULT CP11Certificate::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) 
 	_return(FAIL)
 }
 
-CP11Data::CP11Data(void *TemplateData) : CP11Object(CKO_DATA,TemplateData)
+CP11Data::CP11Data(CCardTemplateData *TemplateData) : CP11Object(CKO_DATA,TemplateData)
 {
 	bReadValue=false;
 }
@@ -146,7 +147,7 @@ RESULT CP11Data::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) {
 	init_func
 	AttributeMap::iterator it=attributes.find(type);
 	if (it==attributes.end() && !bReadValue) {
-		P11ER_CALL(pSlot->pTemplate->FunctionList.templateReadObjectAttributes(pSlot->pTemplateData,this),
+		P11ER_CALL(pSlot->pTemplateData->ReadObjectAttributes(this),
 			ERR_CANT_READ_FROM_CARD)
 	}
 
@@ -188,7 +189,7 @@ RESULT CP11Object::IsPrivate(bool &bPrivate)
 	_return(FAIL)
 }
 
-CP11PrivateKey::CP11PrivateKey(void *TemplateData) : CP11Object(CKO_PRIVATE_KEY,TemplateData)
+CP11PrivateKey::CP11PrivateKey(CCardTemplateData *TemplateData) : CP11Object(CKO_PRIVATE_KEY,TemplateData)
 {
 	bReadValue=false;
 }
@@ -207,7 +208,7 @@ RESULT CP11PrivateKey::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) {
 
 	AttributeMap::iterator it=attributes.find(type);
 	if (it==attributes.end() && !bReadValue) {
-		P11ER_CALL(pSlot->pTemplate->FunctionList.templateReadObjectAttributes(pSlot->pTemplateData,this),
+		P11ER_CALL(pSlot->pTemplateData->ReadObjectAttributes(this),
 			ERR_CANT_READ_FROM_CARD)
 	}
 
@@ -217,7 +218,7 @@ RESULT CP11PrivateKey::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) {
 	_return(FAIL)
 }
 
-CP11PublicKey::CP11PublicKey(void *TemplateData) : CP11Object(CKO_PUBLIC_KEY,TemplateData)
+CP11PublicKey::CP11PublicKey(CCardTemplateData *TemplateData) : CP11Object(CKO_PUBLIC_KEY,TemplateData)
 {
 	bReadValue=false;
 }
@@ -227,7 +228,7 @@ RESULT CP11PublicKey::getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue) {
 
 	AttributeMap::iterator it=attributes.find(type);
 	if (it==attributes.end() && !bReadValue) {
-		P11ER_CALL(pSlot->pTemplate->FunctionList.templateReadObjectAttributes(pSlot->pTemplateData,this),
+		P11ER_CALL(pSlot->pTemplateData->ReadObjectAttributes(this),
 			ERR_CANT_READ_FROM_CARD)
 	}
 

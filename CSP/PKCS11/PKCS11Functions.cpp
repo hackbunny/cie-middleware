@@ -336,7 +336,7 @@ CK_RV CK_ENTRY C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApp
 		Log.writePure("Lettore: %s",pSlot->szName.lock());
 		Log.writePure("CardManager: %s",pSlot->pTemplate->szName.lock());
 		String szModel;
-		pSlot->pTemplate->FunctionList.templateGetModel(*pSlot,szModel);
+		pSlot->pTemplate->GetModel(*pSlot,szModel);
 		Log.writePure("Tipo Carta: %s",szModel.lock());
 	}
 

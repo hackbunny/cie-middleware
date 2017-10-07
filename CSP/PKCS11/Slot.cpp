@@ -434,12 +434,12 @@ CK_RV CSlot::GetTokenInfo(CK_TOKEN_INFO_PTR pInfo)
 	
 	if (baSerial.isEmpty() || pSerialTemplate!=pTemplate) {
 		pSerialTemplate=pTemplate;
-		P11ER_CALL(pTemplate->FunctionList.templateGetSerial(*this,baSerial),
+		P11ER_CALL(pTemplate->GetSerial(*this,baSerial),
 			ERR_READ_SERIAL)
 	}
 
 	String model;
-	P11ER_CALL(pTemplate->FunctionList.templateGetModel(*this,model),
+	P11ER_CALL(pTemplate->GetModel(*this,model),
 		ERR_READ_MODEL)
 
 	memset(pInfo->serialNumber,' ',sizeof(pInfo->serialNumber));
@@ -452,7 +452,7 @@ CK_RV CSlot::GetTokenInfo(CK_TOKEN_INFO_PTR pInfo)
 	memcpy_s(pInfo->model,16,model.lock(),min(model.strlen(),sizeof(pInfo->model)));	
 
 	DWORD dwFlags;
-	P11ER_CALL(pTemplate->FunctionList.templateGetTokenFlags(*this,dwFlags),
+	P11ER_CALL(pTemplate->GetTokenFlags(*this,dwFlags),
 		ERR_READ_SERIAL)
 	pInfo->flags=dwFlags;
 
@@ -521,7 +521,7 @@ RESULT CSlot::Init()
 		if (!pTemplate)
 			_return(CKR_TOKEN_NOT_RECOGNIZED)
 
-		P11ER_CALL(pTemplate->FunctionList.templateInitCard(pTemplateData,*this),
+		P11ER_CALL(pTemplate->InitCard(pTemplateData,*this),
 			ERR_CANT_INITIALIZE_CARD_STRUCTURES)
 		bUpdated=true;
 	}
@@ -534,7 +534,7 @@ void CSlot::Final()
 {
 	if (bUpdated) {
 		// cancello i dati del template
-		pTemplate->FunctionList.templateFinalCard(pTemplateData);
+		pTemplateData.reset();
 		pTemplate=NULL;
 
 		baATR.clear();

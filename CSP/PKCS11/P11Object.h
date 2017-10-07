@@ -20,9 +20,9 @@ public:
 	static DWORD dwP11ObjectCnt;
 
 	CSlot *pSlot;
-	void *pTemplateData; //dati specifici per il template della carta
+	CCardTemplateData *pTemplateData; //dati specifici per il template della carta
 
-	CP11Object(CK_OBJECT_CLASS objClass,void *TemplateData);
+	CP11Object(CK_OBJECT_CLASS objClass, CCardTemplateData *TemplateData);
 	CK_OBJECT_CLASS ObjClass;
 	AttributeMap attributes;
 	RESULT addAttribute(CK_ATTRIBUTE_TYPE type,ByteArray &data);
@@ -39,7 +39,7 @@ public:
 class CP11Certificate : public CP11Object
 {
 public:
-	CP11Certificate(void *TemplateData);
+	CP11Certificate(CCardTemplateData *TemplateData);
 	RESULT getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue);
 	RESULT SetAttributes(CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount);
 };
@@ -47,7 +47,7 @@ public:
 class CP11Data : public CP11Object
 {
 public:
-	CP11Data(void *TemplateData);
+	CP11Data(CCardTemplateData *TemplateData);
 	RESULT getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue);
 	RESULT SetAttributes(CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount);
 };
@@ -55,14 +55,14 @@ public:
 class CP11PublicKey : public CP11Object
 {
 public:
-	CP11PublicKey(void *TemplateData);
+	CP11PublicKey(CCardTemplateData *TemplateData);
 	RESULT getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue);
 };
 
 class CP11PrivateKey : public CP11Object
 {
 public:
-	CP11PrivateKey(void *TemplateData);
+	CP11PrivateKey(CCardTemplateData *TemplateData);
 	RESULT getAttribute(CK_ATTRIBUTE_TYPE type,ByteArray *&pValue);
 };
 

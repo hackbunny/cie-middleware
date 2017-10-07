@@ -26,6 +26,7 @@ typedef std::vector<std::shared_ptr<class CP11Object>> P11ObjectVector;
 // corrente
 
 class CCardTemplate;
+class CCardTemplateData;
 
 #define CKU_NOBODY	0xffffff
 
@@ -104,7 +105,7 @@ public:
 	std::shared_ptr<CCardTemplate> pTemplate;	// template della carta
 												// (aggoirnato se bUpdated=true
 
-	void *pTemplateData;
+	std::unique_ptr<CCardTemplateData> pTemplateData;
 								// i dati specifici del template della carta,
 								// gestiti dalla DLL manager
 
